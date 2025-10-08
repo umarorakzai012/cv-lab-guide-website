@@ -1236,6 +1236,109 @@ print(f"4× downsampled: {downsampled_4x.shape}")`}
               />
             </div>
           </ConceptCard>
+
+          <ConceptCard title="Adaptive median filter while preserving edges">
+            <div className="space-y-4">
+              <CodeBlock
+                code={`import cv2
+import numpy as np
+
+def adaptive_median_filter(img, max_kernel_size=7):
+    """
+    Adaptive Median Filter implementation for grayscale images.
+    
+    Parameters:
+        img (ndarray): Input noisy grayscale image.
+        max_kernel_size (int): Maximum allowed kernel size (must be odd).
+    
+    Returns:
+        filtered_img (ndarray): Noise-reduced image preserving edges.
+    """
+    # Ensure grayscale
+    if len(img.shape) == 3:
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+
+    padded_img = cv2.copyMakeBorder(img, max_kernel_size//2, max_kernel_size//2,
+                                    max_kernel_size//2, max_kernel_size//2, cv2.BORDER_REFLECT)
+    filtered_img = np.zeros_like(img)
+
+    rows, cols = img.shape
+
+    for i in range(rows):
+        for j in range(cols):
+            k = 3  # start with small window
+            pixel = 0
+            while k <= max_kernel_size:
+                half_k = k // 2
+                window = padded_img[i:i+k, j:j+k]
+                
+                z_min = np.min(window)
+                z_max = np.max(window)
+                z_med = np.median(window)
+                z_xy = padded_img[i + max_kernel_size//2, j + max_kernel_size//2]
+
+                A1 = z_med - z_min
+                A2 = z_med - z_max
+
+                if A1 > 0 and A2 < 0:
+                    # Stage B
+                    B1 = z_xy - z_min
+                    B2 = z_xy - z_max
+                    if B1 > 0 and B2 < 0:
+                        pixel = z_xy
+                    else:
+                        pixel = z_med
+                    break
+                else:
+                    k += 2  # increase window size
+                    if k > max_kernel_size:
+                        pixel = z_med
+                        break
+
+            filtered_img[i, j] = pixel
+
+    return filtered_img
+
+
+# --------------------------
+# Example usage
+# --------------------------
+if _name_ == "_main_":
+    # Read input image (grayscale)
+    img = cv2.imread("noisy_image.png", cv2.IMREAD_GRAYSCALE)
+
+    filtered = adaptive_median_filter(img, max_kernel_size=7)
+
+    cv2.imshow("Original", img)
+    cv2.imshow("Adaptive Median Filtered", filtered)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()`}
+              />
+            </div>
+          </ConceptCard>
+
+          <ConceptCard title="Mean filter">
+            <div className="space-y-4">
+              <CodeBlock
+                code={`import cv2
+import numpy as np
+
+# Read the image
+img = cv2.imread("noisy_image.png")
+
+# Apply Mean Filter (Average Blur)
+# ksize is the kernel size (must be odd, e.g., 3x3, 5x5)
+filtered_img = cv2.blur(img, (5, 5))
+
+# Display the results
+cv2.imshow("Original Image", img)
+cv2.imshow("Mean Filtered Image", filtered_img)
+cv2.waitKey(0)
+cv2.destroyAllWindows()
+`}
+              />
+            </div>
+          </ConceptCard>
         </TabsContent>
 
         <TabsContent value="tasks" className="space-y-6 mt-6">

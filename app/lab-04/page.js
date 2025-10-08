@@ -1115,6 +1115,108 @@ plt.show()`}
               />
             </div>
           </ConceptCard>
+
+          <ConceptCard title="Corner Detection for image stitching">
+            <div className="space-y-4">
+              <CodeBlock
+                code={`import cv2
+import numpy as np
+
+# ---- Load images ----
+img1 = cv2.imread('image1.jpg')
+img2 = cv2.imread('image2.jpg')
+
+# Convert to grayscale
+gray1 = cv2.cvtColor(img1, cv2.COLOR_BGR2GRAY)
+gray2 = cv2.cvtColor(img2, cv2.COLOR_BGR2GRAY)
+
+# ---- Detect corners using Shi-Tomasi ----
+corners1 = cv2.goodFeaturesToTrack(gray1, maxCorners=200, qualityLevel=0.01, minDistance=10)
+corners2 = cv2.goodFeaturesToTrack(gray2, maxCorners=200, qualityLevel=0.01, minDistance=10)
+
+corners1 = np.int0(corners1)
+corners2 = np.int0(corners2)
+
+# ---- Draw corners on images ----
+for i in corners1:
+    x, y = i.ravel()
+    cv2.circle(img1, (x, y), 4, (0, 0, 255), -1)
+
+for i in corners2:
+    x, y = i.ravel()
+    cv2.circle(img2, (x, y), 4, (0, 0, 255), -1)
+
+# ---- Display results ----
+cv2.imshow("Corners in Image 1", img1)
+cv2.imshow("Corners in Image 2", img2)
+
+cv2.waitKey(0)
+cv2.destroyAllWindows()
+`}
+              />
+            </div>
+          </ConceptCard>
+
+          <ConceptCard title="Feature detection and matching using ORB detector">
+            <div className="space-y-4">
+              <CodeBlock
+                code={`import cv2
+
+# ---- Load images ----
+img1 = cv2.imread('image1.jpg', cv2.IMREAD_GRAYSCALE)
+img2 = cv2.imread('image2.jpg', cv2.IMREAD_GRAYSCALE)
+
+# ---- Initialize ORB detector ----
+orb = cv2.ORB_create(nfeatures=1000)
+
+# ---- Detect keypoints and descriptors ----
+kp1, des1 = orb.detectAndCompute(img1, None)
+kp2, des2 = orb.detectAndCompute(img2, None)
+
+# ---- Create Brute-Force Matcher ----
+bf = cv2.BFMatcher(cv2.NORM_HAMMING, crossCheck=True)
+
+# ---- Match descriptors ----
+matches = bf.match(des1, des2)
+
+# Sort matches by distance (best first)
+matches = sorted(matches, key=lambda x: x.distance)
+
+# ---- Draw top 50 matches ----
+matched_img = cv2.drawMatches(img1, kp1, img2, kp2, matches[:50], None, flags=2)
+
+# ---- Display ----
+cv2.imshow("Image 1", img1)
+cv2.imshow("Image 2", img2)
+cv2.imshow("ORB Feature Matches", matched_img)
+cv2.waitKey(0)
+cv2.destroyAllWindows()`}
+              />
+            </div>
+          </ConceptCard>
+
+          <ConceptCard title="Analyse orb performance">
+            <div className="space-y-4">
+              <CodeBlock
+                code={`def analyze_orb_performance(img1, img2):
+    orb = cv2.ORB_create(nfeatures=1000)
+    kp1, des1 = orb.detectAndCompute(img1, None)
+    kp2, des2 = orb.detectAndCompute(img2, None)
+
+    bf = cv2.BFMatcher(cv2.NORM_HAMMING, crossCheck=True)
+    matches = bf.match(des1, des2)
+    matches = sorted(matches, key=lambda x: x.distance)
+    good = [m for m in matches if m.distance < 50]
+
+    print(f"Total matches: {len(matches)}")
+    print(f"Good matches: {len(good)}")
+    print(f"Accuracy: {(len(good)/len(matches))*100:.2f}%")
+    print(f"Keypoints Image1: {len(kp1)}, Image2: {len(kp2)}")
+
+    return matches, good`}
+              />
+            </div>
+          </ConceptCard>
         </TabsContent>
 
         <TabsContent value="tasks" className="space-y-6 mt-6">
