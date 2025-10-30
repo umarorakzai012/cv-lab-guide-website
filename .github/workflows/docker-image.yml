@@ -1,0 +1,31 @@
+name: Build and Deploy NextJs App
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Build Docker image
+        run: docker build -t cv-lab-guide .
+
+      - name: Decode SSH key and save
+        run: |
+          echo "${{ secrets.EC2_SSH_KEY_B64 }}" | base64 -d > private_key.pem
+          chmod 600 private_key.pem
+
+      - name: Copy image to EC2 and run it
+        run: |
+          docker save cv-lab-guide | bzip2 | ssh -o StrictHostKeyChecking=no -i private_key.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} 'bunzip2 | sudo docker load'
+          ssh -o StrictHostKeyChecking=no -i private_key.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
+            sudo docker stop cv-lab-guide || true
+            sudo docker rm cv-lab-guide || true
+            sudo docker run -d --name cv-lab-guide -p 80:3000 fastapi-app
+          EOF
