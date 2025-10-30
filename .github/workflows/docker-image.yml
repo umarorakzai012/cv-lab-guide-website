@@ -27,5 +27,5 @@ jobs:
           ssh -o StrictHostKeyChecking=no -i private_key.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
             sudo docker stop cv-lab-guide || true
             sudo docker rm cv-lab-guide || true
-            sudo docker run -d --name cv-lab-guide -p 80:3000 fastapi-app
+            sudo docker run -d --name cv-lab-guide -p 80:3000 cv-lab-guide
           EOF
